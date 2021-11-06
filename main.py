@@ -7,7 +7,7 @@ turtle.speed(0)
 
 s = turtle.Screen()
 
-DeltaTime = 0.1
+DeltaTime = 1
 
 G = 6.6743 * pow(10, -11)
 
@@ -57,12 +57,10 @@ class Planet :
         self.mass = mass
 
     def CalculateAttraction(self, b) :
-        attraction = G * self.mass * b.mass / pow((self.position - b.position).Length(), 2) / -self.mass
+        attraction = G * self.mass * b.mass / -pow((self.position - b.position).Length(), 2) / self.mass
 
         print(self.name, " Distance to ", b.name, (self.position - b.position).Length())
         print(self.name, "Attraction to ", b.name, attraction)
-
-        print("\n", "\n")
 
         return attraction
 
@@ -70,10 +68,16 @@ class Planet :
         i = 0
         while i < len(PlanetList) :
             if (PlanetList[i] != self) :
-                self.acceleration = (self.position - PlanetList[i].position).Normalize() * math.floor(self.CalculateAttraction(PlanetList[i]))
+                self.acceleration = self.position - PlanetList[i].position.Normalize() * self.CalculateAttraction(PlanetList[i])
             i = i + 1
-        self.velocity = Vector(self.velocity.x + self.acceleration.x, self.velocity.y + self.acceleration.y)
-        self.position = Vector(self.position.x + self.velocity.x, self.position.y + self.velocity.y)
+        self.velocity = self.velocity + self.acceleration * DeltaTime
+        self.position = self.position + self.velocity * DeltaTime
+
+        print("Position of ", self.name, self.position.x, self.position.y)
+        print("Velocity of ", self.name, self.velocity.x, self.velocity.y)
+        print("Acceleration of ", self.name, self.acceleration.x, self.acceleration.y)
+
+        print("\n")
 
         if self.position.x < -s.window_width() / 2 :
             self.position.x = -s.window_width() / 2
@@ -84,8 +88,8 @@ class Planet :
         elif self.position.y > s.window_height() / 2 :
             self.position.y = s.window_height() / 2  
 
-Earth = Planet("Earth", 10, 1000, Vector(10, 0), Vector(0, 0))
-Moon = Planet("Moon", 7, 100, Vector(0, 0), Vector(0, 50))
+Earth = Planet("Earth", 10, 1000, Vector(0, 0), Vector(0, 0))
+Moon = Planet("Moon", 5, 10, Vector(0, 0), Vector(0, 100))
 
 PlanetList = [Earth, Moon]
 
@@ -97,12 +101,10 @@ while True :
     turtle.ht()
     i = 0
     while i < len(PlanetList) :
-        print("Position of ", PlanetList[i].name, PlanetList[i].position.x, PlanetList[i].position.y)
-        print("Velocity of ", PlanetList[i].name, PlanetList[i].velocity.x, PlanetList[i].velocity.y)
-        print("Acceleration of ", PlanetList[i].name, PlanetList[i].acceleration.x, PlanetList[i].acceleration.y)
+        
         PlanetList[i].Tick(PlanetList)
         turtle.penup()
-        turtle.goto(PlanetList[i].position.x, PlanetList[i].position.y)
+        turtle.goto(round(PlanetList[i].position.x), round(PlanetList[i].position.y))
         turtle.pendown()
         turtle.begin_fill()
         turtle.circle(PlanetList[i].radius)
