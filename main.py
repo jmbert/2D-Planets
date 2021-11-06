@@ -15,6 +15,15 @@ class Vector :
     x = 0.0
     y = 0.0
 
+    def Scale(self, b) :
+        return Vector(self.x * b, self.y * b)
+    
+    def Length(self) :
+        return math.sqrt((self.x * self.x) + (self.y * self.y))
+
+    def Normalize(self) :
+        return self.Scale(1 / self.Length())
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -27,30 +36,9 @@ class Vector :
             return Vector(self.x * b.x, self.y * b.y)
         else :
             return Vector(self.x * b, self.y * b)
-        
-    
-    def __truediv__(self, b) :
-        if ((b.x != 0.0) & (b.y != 0.0)) :
-            if (isinstance(b, Vector)) :
-                return Vector(self.x / b.x, self.y / b.y)
-            else :
-                return Vector(self.x / b, self.y / b)
-        else :
-            if (b.x == 0.0) :
-                return Vector(0, self.y / b.y)
-            else :
-                return Vector(self.x / b.x, 0)
     
     def __sub__(self, b) :
         return Vector(self.x - b.x, self.y - b.y)
-
-    def __pow__(self, b) :
-        i = 0
-        while i < b :
-            self = self * b
-            i = i + 1
-        
-        return self
 
 
 class Planet :
@@ -69,10 +57,10 @@ class Planet :
         self.mass = mass
 
     def CalculateAttraction(self, b) :
-        attraction = (Vector(G * self.mass * b.mass, G * self.mass * b.mass) / (pow(self.position - b.position, 2))) * -1
+        attraction = G * self.mass * b.mass / pow((self.position - b.position).Length(), 2) / -self.mass
 
-        print(self.name, " Distance to ", b.name,(self.position - b.position).x, (self.position - b.position).y)
-        print(self.name, "Attraction to ", b.name,attraction.x, attraction.y)
+        print(self.name, " Distance to ", b.name, (self.position - b.position).Length())
+        print(self.name, "Attraction to ", b.name, attraction)
 
         print("\n", "\n")
 
@@ -82,10 +70,10 @@ class Planet :
         i = 0
         while i < len(PlanetList) :
             if (PlanetList[i] != self) :
-                self.acceleration = self.CalculateAttraction(PlanetList[i])
+                self.acceleration = (self.position - PlanetList[i].position).Normalize() * math.floor(self.CalculateAttraction(PlanetList[i]))
             i = i + 1
-        self.velocity = Vector(math.floor(self.velocity.x + self.acceleration.x), math.floor(self.velocity.y + self.acceleration.y))
-        self.position = Vector(math.floor(self.position.x + self.velocity.x), math.floor(self.position.y + self.velocity.y))
+        self.velocity = Vector(self.velocity.x + self.acceleration.x, self.velocity.y + self.acceleration.y)
+        self.position = Vector(self.position.x + self.velocity.x, self.position.y + self.velocity.y)
 
         if self.position.x < -s.window_width() / 2 :
             self.position.x = -s.window_width() / 2
@@ -96,8 +84,8 @@ class Planet :
         elif self.position.y > s.window_height() / 2 :
             self.position.y = s.window_height() / 2  
 
-Earth = Planet("Earth", 10, 100000)
-Moon = Planet("Moon", 7, 700, Vector(10, 0), Vector(0, 70))
+Earth = Planet("Earth", 10, 1000, Vector(10, 0), Vector(0, 0))
+Moon = Planet("Moon", 7, 100, Vector(0, 0), Vector(0, 50))
 
 PlanetList = [Earth, Moon]
 
